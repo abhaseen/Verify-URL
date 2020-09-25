@@ -50,9 +50,9 @@ serverErrorCode = range(500, 600)
 urls = []
 
 # Testing URLs:
-# urls.append('http://google.com')  # 200
-# urls.append('http://google.com/nothere')  # 404
-# urls.append('http://api.github.com/user')  # 401
+urls.append('https://google.com')  # 200
+urls.append('http://google.com/nothere')  # 404
+#urls.append('http://api.github.com/user')  # 401
 
 # Main Component of Program
 
@@ -71,12 +71,14 @@ def main(singleUrl, version, filename):
         if singleUrl not in ('default', 'const'):
             urls.append(singleUrl)
         elif filename:
-            if filename[0].endswith(".html"):
-                with open(filename[0], "r") as fetched_url:
+            ## Assuming this is a LOCAL file thats being read for Remote URLS 
+            if (filename[0].endswith(".html")):
+                with open(filename[0], 'r') as fetched_url:
                     source = fetched_url.read()
-                    soup = bs.BeautifulSoup(source, "lxml")
-                for url in soup.find_all("a"):
-                    urls.append(url.get_text("href"))
+                    soup = bs.BeautifulSoup(source, 'lxml')
+                for url in soup.find_all('a'):
+                    urls.append(url.get_text('href'))
+            ## ----------------------------------------------------------------
             else:
                 print(
                     f"{bcolors.WARNING}⚠️ File should be in HTML format, for single URLs please use the -u/--url arguments before the URL.{bcolors.ENDC}"
