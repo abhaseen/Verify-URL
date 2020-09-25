@@ -26,7 +26,7 @@ Now, as for the default main core of the program, the idea was to build a tool t
 
 ![Read File](docs/ReadFile.png)
 
-As we can see several things are implemented here:
+As we can see, several things are implemented here:
 
 - Color for different request code ranges
 - Error handling for Connections that are refused
@@ -100,7 +100,7 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 
 ## Versioning
 
-Version 0.1 - Stable Release. Has the following features:
+Version 0.1 - Stable Release. Features listed in the Detailed Description.
 
 ## Authors
 
