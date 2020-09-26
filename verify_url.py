@@ -71,14 +71,12 @@ def main(singleUrl, version, filename):
         if singleUrl not in ('default', 'const'):
             urls.append(singleUrl)
         elif filename:
-            ## Assuming this is a LOCAL file thats being read for Remote URLS 
             if (filename[0].endswith(".html")):
-                with open(filename[0], 'r') as fetched_url:
-                    source = fetched_url.read()
+                with open(filename[0], 'r') as local_html:
+                    source = local_html.read()
                     soup = bs.BeautifulSoup(source, 'lxml')
                 for url in soup.find_all('a'):
                     urls.append(url.get_text('href'))
-            ## ----------------------------------------------------------------
             else:
                 print(
                     f"{bcolors.WARNING}⚠️ File should be in HTML format, for single URLs please use the -u/--url arguments before the URL.{bcolors.ENDC}"
