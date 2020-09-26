@@ -45,7 +45,7 @@ You will need to install python3
 You may or may not need to set up a virtual environment depending on your OS. If you want to set up a Virtual Environment, you will have to type the following:
 
 ```shell
-    python3 -m venv env
+    python3 -m venv .venv
 ```
 
 The above line should <u>only</u> be ran **the first time** you set up your folder
@@ -53,29 +53,17 @@ The above line should <u>only</u> be ran **the first time** you set up your fold
 Once it has been created, you will want to run the source command:
 
 ```shell
-    source [location_of_your_folder/env/bin/activate]
+    source [location_of_your_folder/.venv/bin/activate]
 ```
 
-You will know if it worked or not if you see `(env)` infront of where you would input your command line operations. (Just see the pictures above, it should look similar.)
+You will know if it worked or not if you see `(.venv)` infront of where you would input your command line operations. (Just see the pictures above, it should look similar.)
 
 ---
 
-After that, you'll want get the requests library by typing this into your command line:
+After that, you'll want to install the libraries
 
 ```shell
-    pip install requests
-```
-
-In order to parse HTML files into Python, we need to use Beautiful Soup:
-
-```shell
-    pip install beautifulsoup4
-```
-
-Then we have to use the lxml to process the HTML file:
-
-```shell
-    pip install lxml
+    pip3 install -r requirements.txt
 ```
 
 Make sure to use latest version of UTF encoding to get the proper emojis for the script responses.
