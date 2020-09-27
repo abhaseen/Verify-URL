@@ -78,7 +78,7 @@ def main(singleUrl, version, filename):
                         soup = bs.BeautifulSoup(source, "lxml")
                     for url in soup.find_all("a"):
                         urls.append(url.get_text("href"))
-                except FileNotFoundError as invalid_file:
+                except FileNotFoundError:
                     print(
                         f"{bcolors.WARNING}⚠️ File not found. Please enter a valid HTML file.{bcolors.ENDC}"
                     )
