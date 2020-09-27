@@ -88,11 +88,12 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 
 ## Versioning
 
-Version 0.1 - Stable Release. Features listed in the Detailed Description.
+Version 0.2 - Stable Release. Features listed in the Detailed Description.
 
 ## Authors
 
 - **Andre Bhaseen** - _Initial work_ - [abhaseen](https://github.com/abhaseen)
+- **SparrowOchon** - _Feature_ - [SparrowOchon](https://github.com/SparrowOchon)
 
 ## License
 
