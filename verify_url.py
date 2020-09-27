@@ -1,6 +1,6 @@
 # Tool Name: Verify URL
 # Tool Author: Andre Bhaseen
-# Version: 0.1
+# Version: 0.2
 # Liscence: MIT Liscence
 # Description: A Tool used to verify the return code of a URL
 
@@ -50,9 +50,9 @@ serverErrorCode = range(500, 600)
 urls = []
 
 # Testing URLs:
-urls.append('https://google.com')  # 200
-urls.append('http://google.com/nothere')  # 404
-#urls.append('http://api.github.com/user')  # 401
+# urls.append("https://google.com")  # 200
+# urls.append("http://google.com/nothere")  # 404
+# urls.append('http://api.github.com/user')  # 401
 
 # Main Component of Program
 
@@ -68,15 +68,20 @@ def main(singleUrl, version, filename):
             f"{bcolors.WARNING}⚠️ URL has not been entered, please enter a URL after the -u/--url argument to analyze.{bcolors.ENDC}"
         )
     else:
-        if singleUrl not in ('default', 'const'):
+        if singleUrl not in ("default", "const"):
             urls.append(singleUrl)
         elif filename:
-            if (filename[0].endswith(".html")):
-                with open(filename[0], 'r') as local_html:
-                    source = local_html.read()
-                    soup = bs.BeautifulSoup(source, 'lxml')
-                for url in soup.find_all('a'):
-                    urls.append(url.get_text('href'))
+            if filename[0].endswith(".html"):
+                try:
+                    with open(filename[0], "r") as local_html:
+                        source = local_html.read()
+                        soup = bs.BeautifulSoup(source, "lxml")
+                    for url in soup.find_all("a"):
+                        urls.append(url.get_text("href"))
+                except FileNotFoundError:
+                    print(
+                        f"{bcolors.WARNING}⚠️ File not found. Please enter a valid HTML file.{bcolors.ENDC}"
+                    )
             else:
                 print(
                     f"{bcolors.WARNING}⚠️ File should be in HTML format, for single URLs please use the -u/--url arguments before the URL.{bcolors.ENDC}"
