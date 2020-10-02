@@ -1,9 +1,10 @@
-# Tool Name: Verify URL
-# Tool Author: Andre Bhaseen
-# Version: 0.2
-# Liscence: MIT Liscence
-# Description: A Tool used to verify the return code of a URL
-
+"""
+Tool Name: Verify URL
+Tool Author: Andre Bhaseen
+Version: 0.3
+Licence: MIT Liscence
+Description: A Tool used to verify the return code of a URL
+"""
 import argparse  # used for parsing customized command line arguemnts
 import sys  # used for grabbing command line argmuents
 
@@ -12,39 +13,28 @@ import sys  # used for grabbing command line argmuents
 # Using beautiful soup for parsing HTML
 # Setting up Beautiful Soup
 
+import colorama
+from colorama import Fore
+
 import bs4 as bs
 import requests  # used for receiving requests codes
 
-# Setting up colors for output
-# Grabbed code from here: https://stackoverflow.com/questions/287871/how-to-print-colored-text-in-python # The origin of the code however is from Blender
-
-
-class bcolors:
-    HEADER = "\033[95m"
-    OKBLUE = "\033[94m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    ORANGEWARNING = "\033[38;5;214m"
-    INFOCYAN = "\033[36m"
-    FAIL = "\033[91m"
-    ENDC = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
-
+# Initializing color
+colorama.init(autoreset=True)
 
 # Setting up range for request codes
 # last number in range is not included - range in python works as: [m,n)
 
 # Informational
-informationalCode = range(100, 200)
+info_code = range(100, 200)
 # Success code range
-successCode = range(200, 300)
+success_code = range(200, 300)
 # Redirection
-redirectCode = range(300, 400)
+redirect_code = range(300, 400)
 # Error code range
-errorCode = range(400, 500)
+client_err_code = range(400, 500)
 # Server Error range
-serverErrorCode = range(500, 600)
+server_err_code = range(500, 600)
 
 # Creating an array to store URLs
 urls = []
@@ -54,84 +44,142 @@ urls = []
 # urls.append("http://google.com/nothere")  # 404
 # urls.append('http://api.github.com/user')  # 401
 
-# Main Component of Program
+
+def generate_status_message(status_code):
+    """Generate message strings based on passed website Status Code.
+
+    Args:
+        status_code (interger): Status code returned by website
+
+    Returns:
+       color [colorama.Fore.COLOR]: Colorama Foreground Color option selected.
+       status_string [string]: Display string associated to Status Code
+    """
+    status_out_dict = [
+        {"color": Fore.CYAN, "string": " - Informational return code ℹ️ - URL:"},
+        {"color": Fore.GREEN, "string": " - Success, this site exists! ✔️ - URL:"},
+        {"color": Fore.BLUE, "string": " - This site will redirect you. ↩ - URL:"},
+        {"color": Fore.RED, "string": " - Failed to reach this site. ❌ - URL:"},
+        {"color": Fore.RED, "string": " - Encountered a server error. 🚫 - URL:"},
+        {"color": Fore.RED, "string": " - Unknown Return Code ⚠️ -  URL:"},
+    ]
+
+    status_string = f"Status Code: {status_code}"
+    if status_code in info_code:
+        message_code = 0
+    elif status_code in success_code:
+        message_code = 1
+    elif status_code in redirect_code:
+        message_code = 2
+    elif status_code in client_err_code:
+        message_code = 3
+    elif status_code in server_err_code:
+        message_code = 4
+    else:
+        # Unknown Error
+        message_code = 5
+
+    color = status_out_dict[message_code]["color"]
+    status_string = f"{status_string}{status_out_dict[message_code]['string']}"
+    return (color, status_string)
 
 
-## This function does WAY too much. Consider splitting it. One Function does ONE THING
-def main(singleUrl, version, filename):
-    if version is True:
-        print(
-            f"{bcolors.HEADER}Verify URL Tool {bcolors.ENDC} Version: {bcolors.BOLD}0.1{bcolors.ENDC}"
+def check_urls():
+    """Make requests to all found urls (be it from file or -u argument) to identify their
+    status code.
+
+    Raises:
+        RuntimeError: Request Error -> Error occured while attempting to make a request.
+    """
+    for url in urls:
+        try:
+            url_req = requests.get(url, timeout=5)
+            print_message(url_req.status_code, url)
+        except requests.exceptions.Timeout:
+            print_message(
+                -2,
+                "Status Code: Read Timed Out - Failed to reach this site. "
+                f"Read Timed Out. ❌ - URL: {url}",
+            )
+        except requests.exceptions.ConnectionError:
+            print_message(
+                -2,
+                "Status Code: Connection refused - Failed to reach this site. "
+                f"Connection Refused. ❌ - URL: {url}",
+            )
+        except requests.exceptions.RequestException as req_error:
+            raise RuntimeError("Request Exception") from req_error
+        except:
+            print("Unexpected Error")
+
+
+def read_html_file(html_file):
+    """Parse html file passed to the string for all urls."""
+    if html_file[0].endswith(".html"):
+        try:
+            with open(html_file[0], "r") as local_html:
+                source = local_html.read()
+                soup = bs.BeautifulSoup(source, "lxml")
+            for url in soup.find_all("a"):
+                urls.append(url.get_text("href"))
+        except FileNotFoundError:
+            print_message(-2, "File not found. Please enter a valid HTML file.")
+    else:
+        print_message(
+            -2,
+            "File should be in HTML format, for single URLs please use the -u/--url"
+            "arguments before the URL.",
         )
-    elif singleUrl == "const":
-        print(
-            f"{bcolors.WARNING}⚠️ URL has not been entered, please enter a URL after the -u/--url argument to analyze.{bcolors.ENDC}"
+
+
+def print_message(status, print_val):
+    """Print message with the correct colors to the screen.
+
+    Args:
+        status (integer): Code used to identify the color: Status Code or Negative numbers (-1, -2)
+        print_val (string): Message we want to print to the screen.
+    """
+    if status == -1:
+        # Header
+        print_color = Fore.MAGENTA
+        out_string = ""
+    elif status == -2:
+        # Program Warning
+        print_color = Fore.YELLOW
+        out_string = "⚠️"
+    else:
+        print_color, out_string = generate_status_message(status)
+    print_val = f"{out_string} {print_val}"
+    print(print_color + print_val)
+
+
+# Main Component of Program
+def main(single_url, version, html_file):
+    """Parse through program arguments. Starting subroutines based on arguments.
+
+    Args:
+        single_url (string): User passed URL
+        version (bool): Identify if the user passed -v or --version
+        html_file (string): Local html file to parse for urls.
+    """
+    if version is True:
+        print_message(-1, "Verify URL Tool -- Version: 0.3")
+    elif single_url == "const":
+        print_message(
+            -2,
+            "URL has not been entered, please enter a URL after the -u/--url"
+            "argument to analyze.",
         )
     else:
-        if singleUrl not in ("default", "const"):
-            urls.append(singleUrl)
-        elif filename:
-            if filename[0].endswith(".html"):
-                try:
-                    with open(filename[0], "r") as local_html:
-                        source = local_html.read()
-                        soup = bs.BeautifulSoup(source, "lxml")
-                    for url in soup.find_all("a"):
-                        urls.append(url.get_text("href"))
-                except FileNotFoundError:
-                    print(
-                        f"{bcolors.WARNING}⚠️ File not found. Please enter a valid HTML file.{bcolors.ENDC}"
-                    )
-            else:
-                print(
-                    f"{bcolors.WARNING}⚠️ File should be in HTML format, for single URLs please use the -u/--url arguments before the URL.{bcolors.ENDC}"
-                )
+        if single_url not in ("default", "const"):
+            urls.append(single_url)
+        elif html_file:
+            read_html_file(html_file)
         else:
             if len(sys.argv) == 1:
                 parser.print_help(sys.stderr)
                 sys.exit(1)
-        for url in urls:
-            try:
-                url_req = requests.get(url, timeout=5)
-                # print(url_req.status_code) #used for testing purposes
-                if url_req.status_code in successCode:
-                    print(
-                        f"{bcolors.WARNING}Status Code:{bcolors.OKGREEN}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.OKGREEN} - Success, this site exists! ✔️{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                    )
-                elif url_req.status_code in errorCode:
-                    print(
-                        f"{bcolors.WARNING}Status Code:{bcolors.FAIL}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.FAIL} - Failed to reach this site. ❌{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                    )
-                elif url_req.status_code in redirectCode:
-                    print(
-                        f"{bcolors.WARNING}Status Code:{bcolors.OKBLUE}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.OKBLUE} - This site will redirect you. ↩{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                    )
-                elif url_req.status_code in serverErrorCode:
-                    print(
-                        f"{bcolors.WARNING}Status Code:{bcolors.ORANGEWARNING}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.ORANGEWARNING} - Encountered a server error. 🚫{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                    )
-                elif url_req.status_code in informationalCode:
-                    print(
-                        f"{bcolors.WARNING}Status Code:{bcolors.INFOCYAN}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.INFOCYAN} - Informational return code ℹ️{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                    )
-                else:
-                    print(
-                        f"{bcolors.WARNING}Status Code:{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.WARNING} - Unknown Return Code ⚠️{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                    )
-            except requests.exceptions.Timeout:
-                url_req.status_code = "Read Timed Out"
-                print(
-                    f"{bcolors.WARNING}Status Code:{bcolors.FAIL}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.FAIL} - Failed to reach this site. Read Timed Out. ❌{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                )
-            except requests.exceptions.ConnectionError:
-                url_req.status_code = "Connection refused"
-                print(
-                    f"{bcolors.WARNING}Status Code:{bcolors.FAIL}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.FAIL} - Failed to reach this site. Connection Refused. ❌{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                )
-            except requests.exceptions.RequestException as req_error:
-                raise SystemExit(req_error)
-            except:
-                print("Unexpected Error")
+        check_urls()
 
 
 # adding ability to add arguments
