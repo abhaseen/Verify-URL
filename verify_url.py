@@ -1,7 +1,7 @@
 """
 Tool Name: Verify URL
 Tool Author: Andre Bhaseen
-Version: 0.3
+Version: 0.4
 Licence: MIT Liscence
 Description: A Tool used to verify the return code of a URL
 """
@@ -38,11 +38,51 @@ server_err_code = range(500, 600)
 
 # Creating an array to store URLs
 urls = []
+status_out_dict = [
+    {"color": Fore.CYAN, "string": " - Informational return code ℹ️ - URL:"},
+    {"color": Fore.GREEN, "string": " - Success, this site exists! ✔️ - URL:"},
+    {"color": Fore.BLUE, "string": " - This site will redirect you. ↩ - URL:"},
+    {"color": Fore.RED, "string": " - Failed to reach this site. ❌ - URL:"},
+    {"color": Fore.RED, "string": " - Encountered a server error. 🚫 - URL:"},
+    {"color": Fore.RED, "string": " - Unknown Return Code ⚠️ -  URL:"},
+]
+headers = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
+}
 
 # Testing URLs:
 # urls.append("https://google.com")  # 200
 # urls.append("http://google.com/nothere")  # 404
 # urls.append('http://api.github.com/user')  # 401
+
+
+# Main Component of Program
+def main(single_url, version, html_file):
+    """Parse through program arguments. Starting subroutines based on arguments.
+
+    Args:
+        single_url (string): User passed URL
+        version (bool): Identify if the user passed -v or --version
+        html_file (string): Local html file to parse for urls.
+    """
+    if version is True:
+        print_message(-1, "Verify URL Tool -- Version: 0.4")
+    elif single_url == "const":
+        print_message(
+            -2,
+            "URL has not been entered, please enter a URL after the -u/--url"
+            "argument to analyze.",
+        )
+    else:
+        if single_url not in ("default", "const"):
+            urls.append(single_url)
+        elif html_file:
+            read_html_file(html_file)
+        else:
+            if len(sys.argv) == 1:
+                parser.print_help(sys.stderr)
+                sys.exit(1)
+        check_urls()
 
 
 def generate_status_message(status_code):
@@ -55,14 +95,6 @@ def generate_status_message(status_code):
        color [colorama.Fore.COLOR]: Colorama Foreground Color option selected.
        status_string [string]: Display string associated to Status Code
     """
-    status_out_dict = [
-        {"color": Fore.CYAN, "string": " - Informational return code ℹ️ - URL:"},
-        {"color": Fore.GREEN, "string": " - Success, this site exists! ✔️ - URL:"},
-        {"color": Fore.BLUE, "string": " - This site will redirect you. ↩ - URL:"},
-        {"color": Fore.RED, "string": " - Failed to reach this site. ❌ - URL:"},
-        {"color": Fore.RED, "string": " - Encountered a server error. 🚫 - URL:"},
-        {"color": Fore.RED, "string": " - Unknown Return Code ⚠️ -  URL:"},
-    ]
 
     status_string = f"Status Code: {status_code}"
     if status_code in info_code:
@@ -93,7 +125,9 @@ def check_urls():
     """
     for url in urls:
         try:
-            url_req = requests.get(url, timeout=5)
+            url_req = requests.head(
+                url, params=headers, timeout=10, allow_redirects=True
+            )
             print_message(url_req.status_code, url)
         except requests.exceptions.Timeout:
             print_message(
@@ -109,8 +143,8 @@ def check_urls():
             )
         except requests.exceptions.RequestException as req_error:
             raise RuntimeError("Request Exception") from req_error
-        except:
-            print("Unexpected Error")
+        except Exception as err:
+            print(f"Unexpected Error: {err}")
 
 
 def read_html_file(html_file):
@@ -151,35 +185,6 @@ def print_message(status, print_val):
         print_color, out_string = generate_status_message(status)
     print_val = f"{out_string} {print_val}"
     print(print_color + print_val)
-
-
-# Main Component of Program
-def main(single_url, version, html_file):
-    """Parse through program arguments. Starting subroutines based on arguments.
-
-    Args:
-        single_url (string): User passed URL
-        version (bool): Identify if the user passed -v or --version
-        html_file (string): Local html file to parse for urls.
-    """
-    if version is True:
-        print_message(-1, "Verify URL Tool -- Version: 0.3")
-    elif single_url == "const":
-        print_message(
-            -2,
-            "URL has not been entered, please enter a URL after the -u/--url"
-            "argument to analyze.",
-        )
-    else:
-        if single_url not in ("default", "const"):
-            urls.append(single_url)
-        elif html_file:
-            read_html_file(html_file)
-        else:
-            if len(sys.argv) == 1:
-                parser.print_help(sys.stderr)
-                sys.exit(1)
-        check_urls()
 
 
 # adding ability to add arguments
