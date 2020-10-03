@@ -55,87 +55,12 @@ urls = []
 # urls.append('http://api.github.com/user')  # 401
 
 # Main Component of Program
+def main():
+    args, filename = get_args()
+    check_args(args.singleUrl, args.version, filename)
+    verify_url()
 
-
-## This function does WAY too much. Consider splitting it. One Function does ONE THING
-def main(singleUrl, version, filename):
-    if version is True:
-        print(
-            f"{bcolors.HEADER}Verify URL Tool {bcolors.ENDC} Version: {bcolors.BOLD}0.1{bcolors.ENDC}"
-        )
-    elif singleUrl == "const":
-        print(
-            f"{bcolors.WARNING}⚠️ URL has not been entered, please enter a URL after the -u/--url argument to analyze.{bcolors.ENDC}"
-        )
-    else:
-        if singleUrl not in ("default", "const"):
-            urls.append(singleUrl)
-        elif filename:
-            if filename[0].endswith(".html"):
-                try:
-                    with open(filename[0], "r") as local_html:
-                        source = local_html.read()
-                        soup = bs.BeautifulSoup(source, "lxml")
-                    for url in soup.find_all("a"):
-                        urls.append(url.get_text("href"))
-                except FileNotFoundError:
-                    print(
-                        f"{bcolors.WARNING}⚠️ File not found. Please enter a valid HTML file.{bcolors.ENDC}"
-                    )
-            else:
-                print(
-                    f"{bcolors.WARNING}⚠️ File should be in HTML format, for single URLs please use the -u/--url arguments before the URL.{bcolors.ENDC}"
-                )
-        else:
-            if len(sys.argv) == 1:
-                parser.print_help(sys.stderr)
-                sys.exit(1)
-        for url in urls:
-            try:
-                url_req = requests.get(url, timeout=5)
-                # print(url_req.status_code) #used for testing purposes
-                if url_req.status_code in successCode:
-                    print(
-                        f"{bcolors.WARNING}Status Code:{bcolors.OKGREEN}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.OKGREEN} - Success, this site exists! ✔️{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                    )
-                elif url_req.status_code in errorCode:
-                    print(
-                        f"{bcolors.WARNING}Status Code:{bcolors.FAIL}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.FAIL} - Failed to reach this site. ❌{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                    )
-                elif url_req.status_code in redirectCode:
-                    print(
-                        f"{bcolors.WARNING}Status Code:{bcolors.OKBLUE}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.OKBLUE} - This site will redirect you. ↩{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                    )
-                elif url_req.status_code in serverErrorCode:
-                    print(
-                        f"{bcolors.WARNING}Status Code:{bcolors.ORANGEWARNING}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.ORANGEWARNING} - Encountered a server error. 🚫{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                    )
-                elif url_req.status_code in informationalCode:
-                    print(
-                        f"{bcolors.WARNING}Status Code:{bcolors.INFOCYAN}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.INFOCYAN} - Informational return code ℹ️{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                    )
-                else:
-                    print(
-                        f"{bcolors.WARNING}Status Code:{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.WARNING} - Unknown Return Code ⚠️{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                    )
-            except requests.exceptions.Timeout:
-                url_req.status_code = "Read Timed Out"
-                print(
-                    f"{bcolors.WARNING}Status Code:{bcolors.FAIL}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.FAIL} - Failed to reach this site. Read Timed Out. ❌{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                )
-            except requests.exceptions.ConnectionError:
-                url_req.status_code = "Connection refused"
-                print(
-                    f"{bcolors.WARNING}Status Code:{bcolors.FAIL}{bcolors.BOLD}{url_req.status_code}{bcolors.ENDC}{bcolors.FAIL} - Failed to reach this site. Connection Refused. ❌{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}"
-                )
-            except requests.exceptions.RequestException as req_error:
-                raise SystemExit(req_error)
-            except:
-                print("Unexpected Error")
-
-
-# adding ability to add arguments
-if __name__ == "__main__":
+def get_args():
     parser = argparse.ArgumentParser(
         description="Tool used for verifyinig the return code of a URL",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -159,6 +84,71 @@ if __name__ == "__main__":
         required=False,
         dest="singleUrl",
     )
-    args, filename = parser.parse_known_args()
-    # args = parser.parse_args()
-    main(args.singleUrl, args.version, filename)
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+    return parser.parse_known_args()
+
+def check_args(singleUrl, version, filename):
+    if version is True:
+        print(f"{bcolors.HEADER}Verify URL Tool {bcolors.ENDC} Version: {bcolors.BOLD}0.1{bcolors.ENDC}")
+        sys.exit(1)
+    elif singleUrl == "const":
+        print(f"{bcolors.WARNING}⚠️ URL has not been entered, please enter a URL after the -u/--url argument to analyze.{bcolors.ENDC}")
+        sys.exit(1)
+    else:
+        if singleUrl not in ("default", "const"):
+            urls.append(singleUrl)
+        elif filename:
+            get_urls(filename)
+
+def get_urls(filename):
+    if filename[0].endswith(".html"):
+        try:
+            with open(filename[0], "r") as local_html:
+                source = local_html.read()
+                soup = bs.BeautifulSoup(source, "lxml")
+            for url in soup.find_all("a"):
+                urls.append(url.get_text("href"))
+        except FileNotFoundError:
+            print(f"{bcolors.WARNING}⚠️ File not found. Please enter a valid HTML file.{bcolors.ENDC}")
+    else:
+        print(f"{bcolors.WARNING}⚠️ File should be in HTML format, for single URLs please use the -u/--url arguments before the URL.{bcolors.ENDC}")
+
+def verify_url():     
+    for url in urls:
+        status_color = bcolors.BOLD
+        message = 'Unknown Return Code ⚠️'
+        try:
+            url_req = requests.get(url, timeout=5)
+            if url_req.status_code in successCode:
+                status_color = bcolors.OKGREEN
+                message = 'Success, this site exists! ✔️'
+            elif url_req.status_code in errorCode:
+                status_color = bcolors.FAIL
+                message = 'Failed to reach this site. ❌'
+            elif url_req.status_code in redirectCode:
+                status_color = bcolors.OKBLUE
+                message = 'This site will redirect you. ↩'
+            elif url_req.status_code in serverErrorCode:
+                status_color = bcolors.ORANGEWARNING
+                message = 'Encountered a server error. 🚫'
+            elif url_req.status_code in informationalCode:
+                status_color = bcolors.INFOCYAN
+                message = 'Informational return code ℹ️'
+            print_status(url, url_req.status_code, status_color, message)
+        except requests.exceptions.Timeout:
+            print_status('Read Timed Out', bcolors.FAIL, 'Failed to reach this site. Read Timed Out. ❌')
+        except requests.exceptions.ConnectionError:
+            print_status('Connection refused', bcolors.FAIL, 'Failed to reach this site. Connection Refused. ❌')
+        except requests.exceptions.RequestException as req_error:
+            raise SystemExit(req_error)
+        except:
+            print("Unexpected Error")
+
+def print_status(url, status_code, status_color, message):
+    print(f"{bcolors.WARNING}Status Code:{status_color}{bcolors.BOLD}{status_code}{bcolors.ENDC}{status_color} - {message}{bcolors.ENDC} {bcolors.BOLD}URL:{bcolors.ENDC} {bcolors.OKBLUE}{url}{bcolors.ENDC}")
+
+# adding ability to add arguments
+if __name__ == "__main__":
+    main()
