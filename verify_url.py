@@ -98,7 +98,6 @@ def check_args(singleUrl, version, filename):
         sys.exit(1)
     else:
         if singleUrl not in ("default", "const"):
-            print(type(singleUrl))
             urls.append(singleUrl)
         elif filename:
             get_urls(filename)
