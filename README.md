@@ -88,7 +88,7 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 
 ## Versioning
 
-Version 0.2 - Stable Release. Features listed in the Detailed Description.
+Version 0.4 - Stable Release. Features listed in the Detailed Description.
 
 ## Authors
 
