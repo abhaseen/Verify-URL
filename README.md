@@ -81,6 +81,7 @@ Open it in a terminal and call it via the command line, see the detailed descrip
 - [lxml](https://lxml.de/) - Used for processing HTML and XML files in Python, used in conjunction with Beautiful Soup
 - [Argparse](https://docs.python.org/3/library/argparse.html) - Used for parsing arguments
 - [Sys](https://docs.python.org/3/library/sys.html) - Used for calling objects from the system
+- [Colorama](https://pypi.org/project/colorama/) - Used for having a cross-platform coloring for the terminal
 
 ## Contributing
 
